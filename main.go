@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
+
 	"os"
 	"os/signal"
 
@@ -42,6 +44,36 @@ func main() {
 	for {
 		pingResult, err := rdb.Ping(ctx).Result()
 		printRedisPingStatus(pingResult, err)
+
+		testKey := fmt.Sprintf("__test-redis-ha-check__%v", rand.Uint64())
+
+		randomValue := rand.Uint64()
+		setResult, err := rdb.Set(ctx, testKey, randomValue, 0).Result()
+		printRedisSetStatus(setResult, err)
+
+		getResult, err := rdb.Get(ctx, testKey).Result()
+		if err != nil {
+			log.Printf("error: get not working for key %s", testKey)
+		}
+
+		expectedResult := fmt.Sprintf("%v", randomValue)
+
+		if getResult == expectedResult {
+			log.Printf("got the set value, get-set okay\n\n")
+		} else {
+			log.Printf("error: did not get the set value, get-set not okay. expected: %v, got: %v\n\n", expectedResult, getResult)
+		}
+
+		unlinkResult, err := rdb.Unlink(ctx, testKey).Result()
+		if err != nil {
+			log.Printf("error: unlink not working for key %s", testKey)
+		}
+
+		if unlinkResult == 1 {
+			log.Printf("unlink worked, all okay\n\n")
+		} else {
+			log.Printf("error: unlink did not work for key %s. you might have to manually delete the key\n\n", testKey)
+		}
 	}
 }
 
@@ -75,5 +107,19 @@ func printRedisPingStatus(pingResult string, err error) {
 		return
 	}
 
-	log.Printf("ping not okay. ping result: %v\n\n", pingResult)
+	log.Printf("error: ping not okay. ping result: %v\n\n", pingResult)
+}
+
+func printRedisSetStatus(setResult string, err error) {
+	if err != nil {
+		log.Printf("error occurred while setting a value in redis: %v\n\n", err)
+		return
+	}
+
+	if setResult == "OK" {
+		log.Printf("set okay\n\n")
+		return
+	}
+
+	log.Printf("error: set not okay. ping result: %v\n\n", setResult)
 }

@@ -1,0 +1,7 @@
+redis-ha-check
+
+.DS_Store
+
+*.tar.gz
+
+config.yaml

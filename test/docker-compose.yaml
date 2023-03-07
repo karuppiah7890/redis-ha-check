@@ -1,0 +1,61 @@
+services:
+  redis-ha-check:
+    build:
+      context: ../
+    command:
+      - /config.yaml
+    volumes:
+      - ./config.yaml:/config.yaml
+
+  redis-1:
+    image: redis:7-alpine
+    user: redis
+    command:
+      - /etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-1:/etc/redis
+
+  redis-2:
+    image: redis:7-alpine
+    user: redis
+    command:
+      - /etc/redis/redis.conf
+    ports:
+      - "6380:6380"
+    volumes:
+      - ./redis-2:/etc/redis
+
+  sentinel1:
+    image: redis:7-alpine
+    user: redis
+    command:
+      - /etc/sentinel/sentinel.conf
+      - --sentinel
+    ports:
+      - "26379:26379"
+    volumes:
+      - ./sentinel-1:/etc/sentinel
+
+  sentinel2:
+    image: redis:7-alpine
+    user: redis
+    command:
+      - /etc/sentinel/sentinel.conf
+      - --sentinel
+    ports:
+      - "26380:26380"
+    volumes:
+      - ./sentinel-2:/etc/sentinel
+
+  sentinel3:
+    image: redis:7-alpine
+    user: redis
+    command:
+      - /etc/sentinel/sentinel.conf
+      - --sentinel
+    ports:
+      - "26381:26381"
+    volumes:
+      - ./sentinel-3:/etc/sentinel
